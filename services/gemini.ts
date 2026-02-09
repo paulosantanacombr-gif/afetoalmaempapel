@@ -4,9 +4,9 @@ import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
 
 const getAiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Forma correta para Vite
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is not configured");
+    throw new Error("A chave da API não está configurada");
   }
   return new GoogleGenerativeAI(apiKey);
 };
