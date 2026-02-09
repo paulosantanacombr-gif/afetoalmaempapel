@@ -1,3 +1,4 @@
+
 import { GoogleGenerativeAI } from "@google/genai"; // Corrigido para alinhar com o package.json
 import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
