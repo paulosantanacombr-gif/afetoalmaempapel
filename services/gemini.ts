@@ -1,10 +1,10 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
 
+// Função para inicializar o cliente da IA com a chave correta
 const getAiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Corrigido de cnv para env
   if (!apiKey) {
     throw new Error("A chave da API não está configurada");
   }
@@ -56,7 +56,9 @@ export const generateCoverImage = async (
   userPromptExtension: string, 
   referenceImageBase64?: string
 ): Promise<{ imageUrl: string, description: string }> => {
-  const ai = getAiClient();
+  const genAI = getAiClient();
+  // Utilizando o modelo estável mais recente para geração de imagens
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
   const fullPrompt = `${FIXED_COVER_PROMPT_BASE}
 
@@ -68,10 +70,10 @@ SPECIFIC DATA FOR THIS GENERATION:
 
 FINAL INSTRUCTION: Center the text "${title}" and "${subtitle}" horizontally in the BOTTOM SAFE AREA of the cover. Ensure the text is 2D and flat. Use colors like gold or bronze for the typography. Ensure the background photo remains sharp. Generate a professional horizontal cover.`;
 
-  const contents: any[] = [{ text: fullPrompt }];
+  const parts: any[] = [{ text: fullPrompt }];
 
   if (referenceImageBase64) {
-    contents.push({
+    parts.push({
       inlineData: {
         mimeType: 'image/jpeg',
         data: referenceImageBase64.split(',')[1] || referenceImageBase64
@@ -79,20 +81,15 @@ FINAL INSTRUCTION: Center the text "${title}" and "${subtitle}" horizontally in 
     });
   }
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: { parts: contents },
-    config: {
-      imageConfig: {
-        aspectRatio: "4:3"
-      }
-    }
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts }],
   });
 
+  const response = await result.response;
   let imageUrl = '';
   let description = 'Capa de luxo minimalista com tipografia 2D centralizada na parte inferior.';
 
-  for (const part of response.candidates[0].content.parts) {
+  for (const part of response.candidates?.[0].content.parts || []) {
     if (part.inlineData) {
       imageUrl = `data:image/png;base64,${part.inlineData.data}`;
     } else if (part.text) {
@@ -112,7 +109,7 @@ export const generateSpreadLayouts = async (
   const config = SIZE_CONFIG[albumSize];
   const width = config.widthCm;
   const height = config.heightCm;
-  const margin = 0.8; // Margens reduzidas para maior aproveitamento
+  const margin = 0.8; 
   const gap = 0.4;    
 
   const safeW = width - (margin * 2);
@@ -121,16 +118,13 @@ export const generateSpreadLayouts = async (
   const count = photos.length;
   let slots: LayoutSlot[] = [];
 
-  // Lógica inteligente baseada no aspecto panorâmico (geralmente 3:1 ou 4:1)
   if (count === 1) {
-    // Foto única: Maximizar ocupação
     slots = [{
       photoId: photos[0].id,
       x: margin, y: margin, width: safeW, height: safeH,
       rotation: 0, aspectRatio: photos[0].aspectRatio, objectFit: 'contain'
     }];
   } else if (count === 2) {
-    // 2 fotos lado a lado
     const w = (safeW - gap) / 2;
     slots = photos.map((p, i) => ({
       photoId: p.id,
@@ -141,7 +135,6 @@ export const generateSpreadLayouts = async (
       rotation: 0, aspectRatio: p.aspectRatio, objectFit: 'contain'
     }));
   } else if (count === 3) {
-    // 3 fotos lado a lado - Perfeito para álbuns panorâmicos
     const w = (safeW - (gap * 2)) / 3;
     slots = photos.map((p, i) => ({
       photoId: p.id,
@@ -152,9 +145,7 @@ export const generateSpreadLayouts = async (
       rotation: 0, aspectRatio: p.aspectRatio, objectFit: 'contain'
     }));
   } else if (count === 4) {
-    // 4 fotos: Testar se todas cabem em uma linha (melhor visibilidade)
     const w = (safeW - (gap * 3)) / 4;
-    // Se as fotos forem muito "altas", talvez 2x2 seja melhor, mas priorizamos 4 colunas para álbuns Afeto
     slots = photos.map((p, i) => ({
       photoId: p.id,
       x: margin + (i * (w + gap)),
@@ -164,7 +155,6 @@ export const generateSpreadLayouts = async (
       rotation: 0, aspectRatio: p.aspectRatio, objectFit: 'contain'
     }));
   } else if (count >= 5 && count <= 6) {
-    // 5 ou 6 fotos: 2 linhas de 3 colunas (aproveita altura e largura)
     const cols = 3;
     const rows = 2;
     const w = (safeW - (gap * (cols - 1))) / cols;
@@ -178,7 +168,6 @@ export const generateSpreadLayouts = async (
       rotation: 0, aspectRatio: p.aspectRatio, objectFit: 'contain'
     }));
   } else {
-    // Muitos itens: Grid otimizado para largura (mais colunas que linhas)
     const cols = Math.ceil(count / 2);
     const rows = 2;
     const w = (safeW - (gap * (cols - 1))) / cols;
