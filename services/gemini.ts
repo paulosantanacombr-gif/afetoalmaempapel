@@ -4,10 +4,11 @@ import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
 
 const getAiClient = () => {
-  if (!process.env.API_KEY) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Forma correta para Vite
+  if (!apiKey) {
     throw new Error("API Key is not configured");
   }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  return new GoogleGenerativeAI(apiKey);
 };
 
 const FIXED_COVER_PROMPT_BASE = `Create a modern luxury photo album cover layout, using any provided photo as the base image.
