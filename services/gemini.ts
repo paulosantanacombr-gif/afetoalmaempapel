@@ -4,7 +4,7 @@ import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
 
 const getAiClient = () => {
-  const apiKey = import.meta.**env**.VITE_GEMINI_API_KEY; // Forma correta para Vite
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Forma correta para Vite
   if (!apiKey) {
     throw new Error("API Key is not configured");
   }
