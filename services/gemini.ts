@@ -1,10 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/genai"; // Corrigido para alinhar com o package.json
 import { Photo, AlbumSize, LayoutOption, LayoutSlot } from "../types";
 import { SIZE_CONFIG } from "../constants";
 
 // Função para inicializar o cliente da IA com a chave correta
 const getAiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Corrigido de cnv para env
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Confirmado como 'env'
   if (!apiKey) {
     throw new Error("A chave da API não está configurada");
   }
@@ -57,7 +57,7 @@ export const generateCoverImage = async (
   referenceImageBase64?: string
 ): Promise<{ imageUrl: string, description: string }> => {
   const genAI = getAiClient();
-  // Utilizando o modelo estável mais recente para geração de imagens
+  // Utilizando o modelo gemini-1.5-flash disponível na biblioteca genai
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
   const fullPrompt = `${FIXED_COVER_PROMPT_BASE}
