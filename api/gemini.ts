@@ -36,9 +36,16 @@ Rules:
         ?.map(p => p.text)
         .join("\n") || "";
 
-    res.status(200).json({ prompt, description: text });
+    // ✅ APENAS UMA resposta
+    return res.status(200).json({
+      prompt,
+      description: text
+    });
 
   } catch (error) {
-    res.status(500).json({ error: "Erro ao gerar com Gemini" });
+    // ✅ APENAS UMA resposta
+    return res.status(500).json({
+      error: "Erro ao gerar com Gemini"
+    });
   }
 }
