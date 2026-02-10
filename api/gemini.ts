@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
     const { title, subtitle, fontName, extraStyle } = req.body;
 
@@ -32,13 +36,9 @@ Rules:
         ?.map(p => p.text)
         .join("\n") || "";
 
-    res.status(200).json({
-      description: text,
-      prompt
-    });
+    res.status(200).json({ prompt, description: text });
 
   } catch (error) {
-    res.status(500).json({ error: "Erro ao falar com a IA" });
+    res.status(500).json({ error: "Erro ao gerar com Gemini" });
   }
 }
-
